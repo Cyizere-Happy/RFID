@@ -14,7 +14,7 @@ function createServer() {
     cors: { origin: "*", methods: ["GET", "POST"] }
   });
 
-  return { app, server, io };
+  return { app, server, io, express: require("express") };
 }
 
 module.exports = createServer;

@@ -1,7 +1,8 @@
 const express = require("express");
-const router = express.Router();
 
 module.exports = (controller) => {
-  router.post("/topup", controller.topup);
+  const router = express.Router();
+  router.post("/topup", (req, res) => controller.topup(req, res));
   return router;
 };
+

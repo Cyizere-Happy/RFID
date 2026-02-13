@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astrum | RFID Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #f1f4fb;
+            --bg-white: #ffffff;
+            --primary: #4f46e5;
+            --text-dark: #1e1b4b;
+            --text-muted: #8b8ea1;
+            --accent-purple: #9d8df1;
+            --accent-orange: #ff9d7d;
+            --accent-green: #90e0c3;
+            --accent-blue: #a3d9ff;
+            --accent-red: #ff8b8b;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Jost', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-dark);
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Full Screen Container */
+        .dashboard-container {
+            background: white;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 200px 1fr 320px;
+            overflow: hidden;
+        }
+
+        /* Left Sidebar */
+        aside.sidebar {
+            padding: 2.5rem 1.2rem;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #f0f2f8;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 3.5rem;
+        }
+
+        .logo-mark {
+            display: grid;
+            grid-template-columns: repeat(3, 4px);
+            gap: 3px;
+        }
+
+        .logo-mark span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--primary);
+        }
+
+        .logo-mark span:nth-child(2),
+        .logo-mark span:nth-child(4) {
+            background: var(--accent-orange);
+        }
+
+        .logo-mark span:nth-child(5) {
+            background: var(--accent-purple);
+        }
+
+        .nav-menu {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .nav-item {
+            text-decoration: none;
+            color: var(--text-muted);
+            padding: 0.8rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-weight: 500;
+            border-radius: 12px;
+            transition: 0.2s;
+        }
+
+        .nav-item.active {
+            background: #f8f9ff;
+            color: var(--text-dark);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+        }
+
+        .nav-item i {
+            font-size: 18px;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            position: relative;
+        }
+
+        .hardware-info {
+            background: #fff8f5;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: left;
+            border: 1px solid #ffe8df;
+        }
+
+        .hardware-info h5 {
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: var(--accent-orange);
+        }
+
+        .hardware-info p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .sidebar-illustration {
+            margin-bottom: 1.5rem;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar-illustration img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Main Content */
+        main.content {
+            padding: 2.5rem 3rem;
+            overflow-y: auto;
+            border-right: 1px solid #f0f2f8;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .greeting h1 {
+            font-size: 32px;
+            font-weight: 600;
+        }
+
+        .greeting p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .header-tools {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .date-picker {
+            background: #f8f9ff;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            color: var(--text-muted);
+            border: none;
+        }
+
+        .icon-btn {
+            width: 42px;
+            height: 42px;
+            background: #f8f9ff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .icon-btn.active::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            width: 6px;
+            height: 6px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+            border: 2px solid #f8f9ff;
+        }
+
+        /* Grid Sections */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Card Feed */
+        .feed-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .feed-row {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .time-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            width: 40px;
+            padding-top: 15px;
+        }
+
+        .card-entry {
+            flex: 1;
+            background: white;
+            border-radius: 20px;
+            padding: 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            border: 1px solid #f8faff;
+            position: relative;
+        }
+
+        .card-entry::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 20%;
+            bottom: 20%;
+            width: 4px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .entry-info h4 {
+            font-size: 15px;
+            margin-bottom: 2px;
+        }
+
+        .entry-info span {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .entry-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .entry-sys::before {
+            background: var(--accent-blue);
+        }
+
+        .entry-sys {
+            background: #f0f7ff;
+        }
+
+        .entry-user::before {
+            background: var(--accent-orange);
+        }
+
+        .entry-user {
+            background: #fff4f0;
+        }
+
+        .entry-admin::before {
+            background: var(--accent-green);
+        }
+
+        .entry-admin {
+            background: #f0fff9;
+        }
+
+        .entry-alert::before {
+            background: var(--accent-red);
+        }
+
+        .entry-alert {
+            background: #fff0f0;
+        }
+
+        /* Latest Activity Card */
+        .marks-card {
+            background: #fff;
+            border-radius: 30px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            box-shadow: var(--shadow);
+        }
+
+        .marks-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-orange), #ff7e5f);
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            font-weight: 700;
+            box-shadow: 0 10px 20px rgba(255, 157, 125, 0.4);
+        }
+
+        /* Calendar */
+        .calendar-widget {
+            width: 100%;
+            background: #f8f9ff;
+            padding: 1.5rem;
+            border-radius: 24px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            text-align: center;
+        }
+
+        .day-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .day {
+            font-size: 13px;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .day.active {
+            background: var(--text-dark);
+            color: white;
+        }
+
+        .day.event {
+            position: relative;
+        }
+
+        .day.event::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+        }
+
+        /* Right Sidebar */
+        .stats-sidebar {
+            padding: 2rem 1.5rem;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+            margin-bottom: 0.8rem;
+            background: #f8f9ff;
+            padding: 12px;
+            border-radius: 20px;
+        }
+
+        .profile-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 16px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .profile h3 {
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .profile p {
+            color: var(--accent-orange);
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card {
+            background: #f8f9ff;
+            padding: 1.2rem;
+            border-radius: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-info span {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .stat-info strong {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .logout-btn {
+            margin-top: auto;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 10px;
+            cursor: pointer;
+            border-top: 1px solid #f0f2f8;
+        }
+
+        /* Top-up Form Card */
+        .topup-card {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 24px;
+            border: 1px solid #f0f2f8;
+            box-shadow: var(--shadow);
+        }
+
+        .topup-card h4 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .topup-card input {
+            width: 100%;
+            background: #f1f4fb;
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .topup-card button {
+            width: 100%;
+            background: var(--text-dark);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .topup-card button:hover {
+            background: var(--primary);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-mark">
+                    <span></span><span></span><span></span>
+                    <span></span><span></span><span></span>
+                </div>
+                <span>astrum</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active">Dashboard</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-illustration">
+                    <img src="https://i.pinimg.com/736x/50/5e/24/505e2476eb8e7c2a9c249c2a42b1adff.jpg"
+                        alt="Sidebar Illustration">
+                </div>
+                <div class="hardware-info">
+                    <h5>RFID Reader v2.1</h5>
+                    <p>Status: Local Host Active</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="content">
+            <div class="header">
+                <div class="greeting">
+                    <h1 id="user-greeting">Hello, Admin!</h1>
+                    <p id="current-date-full">Loading current date...</p>
+                </div>
+                <div class="header-tools">
+                    <div class="date-picker" id="mini-date">12-02-2026</div>
+                    <div class="icon-btn">🔍</div>
+                    <div class="icon-btn active">🔔</div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <!-- Left Column: Entry Feed -->
+                <section>
+                    <div class="section-header">
+                        <h2>Live Entry Feed</h2>
+                        <span id="card-total-count" style="font-size: 13px; color: var(--text-muted);">0 registered
+                            cards</span>
+                    </div>
+                    <div class="feed-container" id="cards-list">
+                        <div class="feed-row">
+                            <div class="time-label">LIVE</div>
+                            <div class="card-entry entry-sys">
+                                <div class="entry-info">
+                                    <h4>System Standby</h4>
+                                    <span>Waiting for RFID scan event...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Column: Last Scanned & Uptime -->
+                <section style="display: flex; flex-direction: column; gap: 2.5rem;">
+                    <div>
+                        <div class="section-header">
+                            <h2>Last Balance</h2>
+                        </div>
+                        <div class="marks-card">
+                            <div class="marks-circle" id="last-balance-val">0</div>
+                            <h4 id="last-scanned-uid">Scan Card</h4>
+                            <p style="color: var(--text-muted); font-size: 13px; margin-top: 5px;">Active Session
+                                Profile</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="section-header">
+                            <h2>Access Continuity</h2>
+                        </div>
+                        <div class="calendar-widget">
+                            <div class="calendar-header">
+                                <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                            </div>
+                            <div class="calendar-grid">
+                                <span class="day event">1</span><span class="day">2</span><span
+                                    class="day">3</span><span class="day">4</span><span class="day">5</span>
+                                <span class="day">6</span><span class="day active">7</span><span
+                                    class="day">8</span><span class="day">9</span><span class="day">10</span>
+                                <span class="day">11</span><span class="day">12</span><span class="day">13</span><span
+                                    class="day">14</span><span class="day">15</span>
+                                <span class="day">16</span><span class="day">17</span><span
+                                    class="day event">18</span><span class="day">19</span><span class="day">20</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Stats Sidebar -->
+        <aside class="stats-sidebar">
+            <div class="profile">
+                <div class="profile-img">👤</div>
+                <div>
+                    <h3 id="profile-name">System Operator</h3>
+                    <p>Authorized</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-info">
+                    <span>Account balance</span>
+                    <strong id="total-balance-all">$0.00</strong>
+                </div>
+                <div style="font-size: 24px;">💰</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-info">
+                    <span>System Status</span>
+                    <strong id="connection-status">Online</strong>
+                </div>
+                <div id="status-icon" style="color: var(--accent-green); font-size: 24px;">●</div>
+            </div>
+
+            <div class="topup-card">
+                <h4><span>💳</span> Quick Top-Up</h4>
+                <form id="topup-form">
+                    <input type="text" id="uid" placeholder="Card UID" required>
+                    <input type="number" id="amount" placeholder="Amount" required>
+                    <button type="submit">Verify & Credit</button>
+                </form>
+            </div>
+
+            <button class="logout-btn">
+                <span>Sign Out</span> ➔
+            </button>
+        </aside>
+    </div>
+
+    <!-- Socket.io -->
+    <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
+    <script>
+        const BACKEND_URL = "http://localhost:3000";
+        const socket = io(BACKEND_URL);
+
+        const cards = {};
+        const scanHistory = []; // Track unique scan order
+        const scanTimes = {};   // Store last scan time per UID
+        let activeUid = null;   // Track which card is currently "focused" on the dashboard
+        const colors = ['entry-user', 'entry-admin', 'entry-sys', 'entry-alert'];
+
+        // Initial Date Setup
+        const now = new Date();
+        document.getElementById("current-date-full").textContent = now.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+        socket.on("connect", () => {
+            document.getElementById("connection-status").textContent = "Online";
+            document.getElementById("status-icon").style.color = "var(--accent-green)";
+        });
+
+        socket.on("disconnect", () => {
+            document.getElementById("connection-status").textContent = "Offline";
+            document.getElementById("status-icon").style.color = "var(--accent-red)";
+        });
+
+        socket.on("card_status", (msg) => {
+            console.log("%c[Socket] card_status received:", "color: #4f46e5; font-weight: bold", msg);
+            const uid = msg.uid;
+            let balance = msg.balance !== undefined ? msg.balance : msg.new_balance;
+
+            if (!uid) return;
+
+            // NEW: If balance is missing, check if we already have it to avoid "0" resets
+            if (balance === undefined || balance === null) {
+                balance = cards[uid];
+            }
+
+            // Set as active card (new scan always takes focus)
+            activeUid = uid;
+
+            // Update balance and timestamps
+            cards[uid] = Number(balance || 0);
+            scanTimes[uid] = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            // Move/Add to front of history
+            const index = scanHistory.indexOf(uid);
+            if (index > -1) scanHistory.splice(index, 1);
+            scanHistory.unshift(uid);
+
+            updateUI();
+        });
+
+        socket.on("balance_update", (msg) => {
+            console.log("%c[Socket] balance_update received:", "color: #ff9d7d; font-weight: bold", msg);
+            const uid = msg.uid;
+            const balance = msg.balance !== undefined ? msg.balance : msg.new_balance;
+
+            if (uid && balance !== undefined && balance !== null) {
+                cards[uid] = Number(balance);
+
+                // IMPORTANT: Only trigger full UI re-render if it's the active card
+                // or if we just want to refresh the history list
+                updateUI();
+            }
+        });
+
+        function updateUI() {
+            try {
+                // Determine which card to display on main widgets
+                const displayUid = activeUid || (scanHistory.length > 0 ? scanHistory[0] : null);
+
+                console.log(`[UI] Updating display for active: ${activeUid} | display: ${displayUid}`);
+
+                // Update Totals
+                const uids = Object.keys(cards);
+                document.getElementById("card-total-count").textContent = `${uids.length} registered cards`;
+
+                // Show the balance of the DISPLAY card in the sidebar and widget
+                const displayBalance = (displayUid && cards[displayUid] !== undefined) ? cards[displayUid] : 0;
+
+                document.getElementById("total-balance-all").textContent = `$${Number(displayBalance).toFixed(2)}`;
+
+                // Update Last Scanned Card widget
+                if (displayUid) {
+                    document.getElementById("last-balance-val").textContent = Number(displayBalance).toFixed(2);
+                    document.getElementById("last-scanned-uid").textContent = displayUid;
+                    // Auto-fill form for current card
+                    document.getElementById("uid").value = displayUid;
+                }
+
+                // Update Entry Feed
+                const list = document.getElementById("cards-list");
+                list.innerHTML = "";
+                scanHistory.forEach((uid, i) => {
+                    const colorClass = colors[i % colors.length];
+                    const time = scanTimes[uid] || "LIVE";
+
+                    const row = document.createElement("div");
+                    row.className = "feed-row";
+                    row.style.cursor = "pointer";
+                    row.onclick = () => {
+                        activeUid = uid; // Manually select this card
+                        updateUI();
+                        document.getElementById("amount").focus();
+                    };
+
+                    row.innerHTML = `
+                    <div class="time-label">${time}</div>
+                    <div class="card-entry ${colorClass}">
+                        <div class="entry-info">
+                            <h4>${uid} ${uid === activeUid ? '<small style="color:var(--primary)">(Active)</small>' : ''}</h4>
+                            <span>Authorized Access Scanned</span>
+                        </div>
+                        <div class="entry-value">$${Number(cards[uid]).toFixed(2)}</div>
+                    </div>
+                `;
+                    list.appendChild(row);
+                });
+            } catch (err) {
+                console.error("UI Update Error:", err);
+            }
+        }
+
+        // Form Submit
+        const form = document.getElementById("topup-form");
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const uid = document.getElementById("uid").value;
+            const amount = parseInt(document.getElementById("amount").value);
+            const btn = form.querySelector("button");
+
+            try {
+                btn.textContent = "Processing...";
+                const res = await fetch(`${BACKEND_URL}/api/topup`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ uid, amount })
+                });
+                const data = await res.json();
+                document.getElementById("amount").value = "";
+            } catch (err) {
+                console.error(err);
+            } finally {
+                btn.textContent = "Verify & Credit";
+            }
+        });
+    </script>
+</body>
+
+</html>
