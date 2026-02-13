@@ -2,6 +2,8 @@
 
 A real-time RFID-based balance management system featuring an ESP8266 reader, a Node.js backend, and a live web dashboard.
 
+🔗 **[Live Dashboard](http://157.173.101.159:8021/)**
+
 ## 🚀 Overview
 
 This project enables real-time interaction with RFID cards. Users can scan cards at a terminal (ESP8266), view their balance on a sleek web dashboard, and perform top-ups instantly.
