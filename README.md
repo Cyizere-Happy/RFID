@@ -1,100 +1,234 @@
-# RFID Top-Up System
+# RFID Wallet Transaction System
 
-A real-time RFID-based balance management system featuring an ESP8266 reader, a Node.js backend, and a live web dashboard.
+A real-time RFID-based wallet system featuring an ESP8266 reader, a Node.js backend, SQLite database integration, and a live web dashboard with separate Admin (Top-Up) and Cashier (Payment) interfaces.
 
-🔗 **[Live Dashboard](http://157.173.101.159:8021/)**
+🔗 **Live Dashboard:** http://157.173.101.159:8021/
+
+---
 
 ## 🚀 Overview
 
-This project enables real-time interaction with RFID cards. Users can scan cards at a terminal (ESP8266), view their balance on a sleek web dashboard, and perform top-ups instantly.
+This project implements a complete RFID Wallet Transaction System that enables:
+
+- Card Top-Up (Credit)
+- Product Payment (Debit)
+- Real-time balance updates
+- Safe wallet updates (atomic transactions)
+- Strict MQTT topic isolation
+
+Users scan RFID cards using an ESP8266 terminal. The backend processes transactions securely and updates the web dashboard instantly via WebSocket.
+
+---
 
 ## 🏗️ Architecture
 
 The system consists of three main components:
 
-1.  **ESP8266 (Firmware/Hardware)**: 
-    - Scans RFID cards using an MFRC522 reader.
-    - Communicates with the backend via MQTT.
-    - Updates local balance upon receiving top-up commands.
-2.  **Node.js Backend**:
-    - Acts as a bridge between the hardware and the web dashboard.
-    - Uses **MQTT** for low-latency communication with the ESP module.
-    - Uses **Socket.io** to push real-time updates to the dashboard.
-    - Manages persistent balance data in `balances.json`.
-3.  **Astrum Dashboard (Frontend)**:
-    - A premium, responsive web interface built with Vanilla JS.
-    - Displays a live feed of card scans.
-    - Allows admins to "Verify & Credit" accounts instantly.
+### 1️⃣ ESP8266 (Firmware / Hardware)
+
+- Scans RFID cards using an MFRC522 reader
+- Publishes card UID and balance via MQTT
+- Subscribes to:
+  - Top-Up commands
+  - Payment commands
+- Updates local balance
+- Publishes updated balance confirmation
+
+**Important:**
+- Does NOT use HTTP  
+- Does NOT use WebSocket  
+
+---
+
+### 2️⃣ Node.js Backend (API + MQTT Bridge)
+
+- Express.js REST API
+- MQTT client (Publish–Subscribe communication)
+- Socket.io for real-time updates
+- SQLite database for transaction integrity
+
+#### API Endpoints
+
+- `POST /topup`
+- `POST /pay`
+
+#### Responsibilities
+
+- Business logic processing
+- Balance validation
+- Safe wallet update (atomic database transaction)
+- MQTT message translation
+- Real-time WebSocket updates to dashboard
+
+---
+
+### 3️⃣ Web Dashboard (Frontend)
+
+Responsive web interface built with Vanilla JS.
+
+#### 🟢 Admin Interface (Top-Up)
+
+- Auto-detected Card UID
+- Previous balance display
+- Top-up amount input
+- “TOP UP” button
+- Success/Fail response
+- Real-time updated balance
+
+#### 🔵 Cashier Interface (Payment)
+
+- Auto-detected Card UID
+- Previous balance display
+- Product dropdown selection
+- Quantity input
+- Auto-calculated total cost
+- “PAY” button
+- Approved/Declined result with reason
+- Real-time updated balance
 
 ---
 
 ## 📂 Project Structure
 
--   `Backend/`: Node.js server, API routes, and Socket.io logic.
--   `Frontend/`: The `Dashboard.html` interface.
--   `ESP8266/`: Arduino source code (`RFDI.ino`) for the hardware reader.
+- `Backend/` – Node.js server, API routes, MQTT logic, database integration
+- `Frontend/` – Web dashboard interface
+- `ESP8266/` – Arduino source code (`RFDI.ino`)
+- `database/` – SQLite database file
 
 ---
 
 ## 🛠️ Setup & Installation
 
-### 1. Backend Setup
-1. Navigate to the `Backend/` directory.
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the server:
-   ```bash
-   npm start
-   ```
-   *The server runs on `http://localhost:3000` by default.*
+### Backend Setup
 
-### 2. ESP8266 Configuration
-1. Open `ESP8266/RFDI.ino` in the Arduino IDE.
-2. Update the WiFi credentials:
-   ```cpp
-   #define WIFI_SSID "Your_SSID"
-   #define WIFI_PASS "Your_Password"
-   ```
-3. Flash the code to your ESP8266 board.
+```bash
+cd Backend
+npm install
+npm start
+```
+
+Server runs on:
+
+```
+http://localhost:3000
+```
 
 ---
 
-## 🔌 Hardware Wiring (MFRC522 ↔ ESP8266)
+### ESP8266 Configuration
 
-| MFRC522 Pin | ESP8266 Pin (NodeMCU/Wemos) | Notes |
-| :--- | :--- | :--- |
-| **VCC** | 3.3V | **Do not use 5V**, ESP8266 is 3.3V logic |
-| **GND** | GND | Ground reference |
-| **RST** | GPIO 0 (D3) | Reset pin (matches `#define RST_PIN 0`) |
-| **NSS/CS** | GPIO 2 (D4) | SPI Slave Select (matches `#define SS_PIN 2`) |
-| **MOSI** | GPIO 13 (D7) | SPI Master Out Slave In |
-| **MISO** | GPIO 12 (D6) | SPI Master In Slave Out |
-| **SCK** | GPIO 14 (D5) | SPI Clock |
+Open `ESP8266/RFDI.ino` in Arduino IDE and update:
 
-> [!TIP]
-> On NodeMCU/Wemos boards, the D# pins map to GPIO numbers:
-> - **D5** = GPIO14
-> - **D6** = GPIO12
-> - **D7** = GPIO13
-> - **D3** = GPIO0
-> - **D4** = GPIO2
+```cpp
+#define WIFI_SSID "Your_SSID"
+#define WIFI_PASS "Your_Password"
+```
+
+Flash the code to your ESP8266 board.
 
 ---
 
-## 📡 Technical Details
+## 🔌 Hardware Wiring (MFRC522 ↔ ESP8266 NodeMCU)
 
-### MQTT Topics
-- `rfid/y2c_team0125/card/status`: Pushed by ESP when a card is scanned.
-- `rfid/y2c_team0125/card/topup`: Pushed by Backend to trigger a balance increase.
-- `rfid/y2c_team0125/card/balance`: Pushed by ESP to confirm the new balance.
+| MFRC522 Pin | ESP8266 Pin | Notes |
+|-------------|------------|-------|
+| VCC | 3.3V | Do NOT use 5V |
+| GND | GND | Ground reference |
+| RST | GPIO0 (D3) | Reset pin |
+| NSS/CS | GPIO2 (D4) | SPI Select |
+| MOSI | GPIO13 (D7) | SPI MOSI |
+| MISO | GPIO12 (D6) | SPI MISO |
+| SCK | GPIO14 (D5) | SPI Clock |
 
-### WebSocket Events
-- `card_status`: Triggered on every scan.
-- `balance_update`: Triggered when a top-up is processed.
+---
+
+## 📡 MQTT Topic Namespace
+
+Base topic:
+
+```
+rfid/y2c_team0125/
+```
+
+### Topics Used
+
+- `rfid/y2c_team0125/card/status`
+- `rfid/y2c_team0125/card/topup`
+- `rfid/y2c_team0125/card/pay`
+- `rfid/y2c_team0125/card/balance`
+
+No wildcard subscriptions.  
+No generic topics.  
+Strict team isolation enforced.
+
+---
+
+## 🗄️ Database Design (SQLite)
+
+The system uses SQLite to ensure safe and atomic wallet operations.
+
+### Tables
+
+- **Cards**
+- **Wallet**
+- **Products**
+- **Transactions (Ledger)**
+
+Each transaction stores:
+- Transaction type (TOPUP / PAYMENT)
+- Previous balance
+- New balance
+- Timestamp
+
+---
+
+## 🔒 Safe Wallet Update (Atomic Transaction)
+
+All wallet operations follow:
+
+1. BEGIN TRANSACTION  
+2. Validate balance (for payments)  
+3. Update wallet balance  
+4. Insert transaction record  
+5. COMMIT  
+
+If any step fails:
+
+ROLLBACK
+
+This guarantees:
+
+- No partial updates  
+- No double spending  
+- No inconsistent balances  
+- Full transaction integrity  
+
+---
+
+## 🔁 Communication Flow
+
+### Card Scan
+ESP → MQTT → Backend → WebSocket → Dashboard  
+
+### Top-Up
+Dashboard → HTTP → Backend → MQTT → ESP  
+ESP → MQTT → Backend → WebSocket → Dashboard  
+
+### Payment
+Dashboard → HTTP → Backend  
+Backend validates balance → Safe DB update → MQTT command to ESP  
+ESP confirms → WebSocket update to dashboard  
+
+---
+
+## 🌍 Deployment
+
+- Backend deployed on VPS
+- Public dashboard accessible online
+- Repository is public and structured
 
 ---
 
 ## 📜 License
-This project is licensed under the ISC License.
+
+Licensed under the ISC License.
